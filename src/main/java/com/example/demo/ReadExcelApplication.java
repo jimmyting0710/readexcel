@@ -13,11 +13,13 @@ public class ReadExcelApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(ReadExcelApplication.class, args);
-		ReadExcel readExcel = new ReadExcel();
-		
+//		ReadExcel readExcel = new ReadExcel();
+//		readexcel2 re2= new readexcel2();
+		read re3= new read();
 		try {
-			readExcel.readExcelStart();
-		
+//			readExcel.readExcelStart();
+//			re2.readExcelStart();
+			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
