@@ -15,11 +15,11 @@ public class ReadExcelApplication {
 		SpringApplication.run(ReadExcelApplication.class, args);
 //		ReadExcel readExcel = new ReadExcel();
 //		readexcel2 re2= new readexcel2();
-		read re3= new read();
+		
 		try {
 //			readExcel.readExcelStart();
 //			re2.readExcelStart();
-			
+			FindCOMP.test();
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

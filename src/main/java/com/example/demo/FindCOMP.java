@@ -27,17 +27,9 @@ import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 遞迴讀取某個目錄下的所有檔案
- * 
- * @author 超越
- * @Date 2016年12月5日,下午4:04:59
- * @motto 人在一起叫聚會，心在一起叫團隊
- * @Version 1.0
- */
-
-public class read {
-	private final static Logger logger = LoggerFactory.getLogger(read.class);
+public class FindCOMP {
+	private final static Logger logger = LoggerFactory.getLogger(FindCOMP.class);
+	static String copybookDirPath;//copybook位置
 	static List<String> queryColArray;// 要抓取的欄位
 	static String excelFolderPath; // excel資料夾位置
 	static String systemName; // excel檔名
@@ -46,14 +38,45 @@ public class read {
 	// (CellIndex,HeaderName)
 	static Map<Integer, String> HeaderName = new HashMap<Integer, String>();
 
-	public static void main(String[] args) {
-		test("D:/si1204/Desktop/writeY/all_copybook_20210820");
+
+
+//	public static void main(String[] args) {
+//		test("D:/si1204/Desktop/writeY/all_copybook_20210820");
+//	}
+
+	/**
+	 * 遞迴讀取某個目錄下的所有檔案
+	 * 
+	 * @author 超越
+	 * @Date 2016年12月5日,下午4:04:59
+	 * @motto 人在一起叫聚會，心在一起叫團隊
+	 * @Version 1.0
+	 */
+	public static  void test() {
+
+		Properties pro = new Properties();
+		String config = "config.properties";
+		
+		try {
+			pro.load(new FileInputStream(config));
+			excelFolderPath = pro.getProperty("excelDir");
+			queryColArray = Arrays.asList(pro.getProperty("queryColArray").split(","));
+			copybookDirPath=pro.getProperty("copybookDir");
+			logger.info("讀取config");
+			readfile(copybookDirPath);
+			logger.info("結束");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
-
-	private static void test(String fileDir) {
-
+	public static void readfile(String copybookDirPath) {
+		logger.info("尋找"+copybookDirPath+"全部檔案");
 		List<File> fileList = new ArrayList<File>();
-		File file = new File(fileDir);
+		File file = new File(copybookDirPath);
 		File[] files = file.listFiles();// 獲取目錄下的所有檔案或資料夾
 		if (files == null) {// 如果目錄為空，直接退出
 			return;
@@ -64,12 +87,13 @@ public class read {
 				fileList.add(f);
 			} else if (f.isDirectory()) {
 //	System.out.println(f.getAbsolutePath()); 
-				test(f.getAbsolutePath());
+				readfile(f.getAbsolutePath());
+				
 			}
 		}
 		for (File f1 : fileList) {
-
-			String copybookpath = fileDir + "\\" + f1.getName();
+			
+			String copybookpath = file + "\\" + f1.getName();
 			String copybookname = f1.getName();
 			readcopybook(copybookpath, copybookname);
 		}
@@ -77,19 +101,20 @@ public class read {
 	}
 
 	public static void readcopybook(String copybookpath, String copybookname) {
+		logger.info("讀取"+copybookname+"是否有COMP");
 		FileReader reader;
 		String str1 = null;
 		try {
 			reader = new FileReader(copybookpath);
 			BufferedReader br = new BufferedReader(reader);
 //System.out.println(copybookpath);
-			
-			//comp3的條件
+
+			// comp3的條件
 			while ((str1 = br.readLine()) != null) {
 				if (str1.contains("S9") && str1.contains("COMP")) {
 //					System.out.println(copybookpath + "11111111111111111111");
 					try {
-
+						logger.info(copybookname+"有COMP與S9");
 						readexcel(copybookname);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -98,6 +123,7 @@ public class read {
 				} else if (str1.contains("PIC 9") && str1.contains("COMP")) {
 //					System.out.println(copybookname + "22222222222222222222");
 					try {
+						logger.info(copybookname+"有COMP與PIC 9");
 						readexcel(copybookname);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -106,6 +132,7 @@ public class read {
 				} else if (str1.contains("PIC  9") && str1.contains("COMP")) {
 //					System.out.println(copybookname + "33333333333333333333");
 					try {
+						logger.info(copybookname+"有COMP與PIC  9");
 						readexcel(copybookname);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -126,13 +153,7 @@ public class read {
 	}
 
 	public static void readexcel(String copybookname) throws Exception {
-		Properties pro = new Properties();
-		String config = "config.properties";
-
-		pro.load(new FileInputStream(config));
-		excelFolderPath = pro.getProperty("excelDir");
-		queryColArray = Arrays.asList(pro.getProperty("queryColArray").split(","));
-
+		logger.info("讀取excel:"+excelFolderPath);
 //		System.out.println(excelFolderPath);
 		File excelFolder = new File(excelFolderPath);
 		List<Map<String, String>> excelInfoList = null;
@@ -147,7 +168,7 @@ public class read {
 			excelInfoList = parseExcel(wb);
 //			System.out.println(excelInfoList);
 			// excel檔名
-			
+
 			systemName = file.getName();
 			wb.close();
 
@@ -159,29 +180,30 @@ public class read {
 	public static void writeexcel(List<Map<String, String>> excelInfoList, String copybookname,
 			String excelFolderPath) {
 //		System.out.println(copybookname);
-		
-		
+		logger.info("寫入excel");
 		for (Map<String, String> text : excelInfoList) {
-			//路徑切割，比對
+			// 路徑切割，比對
 			String lastItem = Stream.of(text.get("Copybook").split("/")).reduce((first, last) -> last).get();
 			if (lastItem.equals(copybookname)) {
-				System.out.println(lastItem);
-				System.out.println(text.get("rowindex"));
+//				System.out.println(lastItem);
+//				System.out.println(text.get("rowindex"));
 				int rownum = Integer.valueOf(text.get("rowindex"));
+				logger.info(lastItem+"在excel第"+(rownum+1)+"行");
 
 				Workbook workbook;
 				try {
-					//寫入EXCEL
+					// 寫入EXCEL
 					workbook = new XSSFWorkbook(excelFolderPath + "\\" + systemName);
 					Sheet sheet1 = workbook.getSheet(sheetName);
 					Cell writeCell = sheet1.getRow(rownum).getCell(col);
-					
+
 					if (writeCell == null) {
 						writeCell = sheet1.getRow(rownum).createCell(col);
 					}
 					writeCell.setCellValue("Y");
 					FileOutputStream fos = new FileOutputStream(excelFolderPath + "\\" + systemName, true);
 					workbook.write(fos);
+					logger.info("excel寫入完成");
 					workbook.close();
 					fos.close();
 				} catch (IOException e) {
@@ -242,7 +264,7 @@ public class read {
 					for (Cell cell : row) {
 						if (queryColArray.contains(cell.getStringCellValue())) {
 							HeaderName.put(cell.getColumnIndex(), cell.getStringCellValue());
-							//給colums位置
+							// 給colums位置
 							if (cell.getStringCellValue().equals("Isbinary")) {
 								col = cell.getColumnIndex();
 							}
@@ -293,5 +315,7 @@ public class read {
 
 		return excelDateMap;
 	}
+
+
 
 }
